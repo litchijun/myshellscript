@@ -1,0 +1,25 @@
+#!/bin/bash
+if [ -z $1 ]
+then
+        echo "Usage: $0 [<commit-hash>] [<src-branch>]"
+	exit 1
+fi
+if [ $2 ]
+then
+        curbranch=$2
+else
+        curbranch="CL"
+fi
+#creat log msg
+tempLogfile="$0.temp"
+echo -e "[merge][$curbranch#$1]\c" > $tempLogfile
+git show $1 --summary  --format="%s%n%n%b" >> $tempLogfile
+
+#cherry-pick
+git cherry-pick -x $1
+if [ $? -ne 0 ]; then
+	echo "git cherry-pick fail, please resolve the conflicts and then run \" git commit -F $tempLogfile\" "
+	exit 1
+fi
+git commit --amend --reset-author -F $tempLogfile
+rm $tempLogfile
